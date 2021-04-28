@@ -1,0 +1,34 @@
+{
+  "editor.formatOnSave": false,
+
+  "C_Cpp.formatting": "Disabled",
+  "C_Cpp.intelliSenseEngine": "Disabled",
+  "C_Cpp.default.cppStandard": "c++20",
+
+  "clangd.checkUpdates": true,
+  "clangd.onConfigChanged": "restart",
+  "clangd.arguments": [
+    "-pretty",
+    "-compile-commands-dir='./build'",
+    "-header-insertion=iwyu",
+    "-header-insertion-decorators",
+    "-completion-style=detailed",
+    "-function-arg-placeholders",
+    "-background-index",
+    "-log=verbose"
+  ],
+
+  "cmake.generator": "Ninja",
+  "cmake.sourceDirectory": "${workspaceFolder}",
+  "cmake.buildDirectory": "${workspaceFolder}/build/${buildKit}/${buildType}",
+  "cmake.copyCompileCommands": "${workspaceFolder}/compile_commands.json",
+  "cmake.environment": {
+    "VERBOSE": "1"
+    // "VCPKG_ROOT": "C:\\Users\\rayga\\projects\\vcpkg",
+    // "VCPKG_DEFAULT_TRIPLET": "x64-windows-static"
+  },
+  "cmake.configureSettings": {
+    "CMAKE_EXPORT_COMPILE_COMMANDS": 1
+    // "CMAKE_TOOLCHAIN_FILE": "%VCPKG_ROOT%\\scripts\\buildsystems\\vcpkg.cmake"
+  }
+}

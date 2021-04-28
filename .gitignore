@@ -1,0 +1,5 @@
+build/
+out/
+.cache/
+.vs/
+cmake-build-debug/
