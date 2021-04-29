@@ -1,7 +1,8 @@
 set(PATCH_PROJECT_DIRECTORIES "JUCE")
 
-find_package(
-  PATCH_EXECUTABLE "patch"
+find_program(
+  PATCH_EXECUTABLE
+  NAMES "patch"
   # This is for my personal use
   HINTS "C:\\Program Files\\Git\\usr\\bin"
   REQUIRED
