@@ -1,7 +1,7 @@
-[submodule "JUCE"]
-	path = JUCE
-	url = https://github.com/juce-framework/JUCE
-	branch = develop
 [submodule "include/vendor/reaper-sdk"]
 	path = include/vendor/reaper-sdk
 	url = https://github.com/justinfrankel/reaper-sdk
+[submodule "JUCE"]
+	path = JUCE
+	url = https://github.com/juce-framework/JUCE.git
+	branch = develop
