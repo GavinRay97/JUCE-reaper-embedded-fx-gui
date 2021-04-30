@@ -27,6 +27,7 @@ void AudioPluginAudioProcessorEditor::paint(juce::Graphics &g) {
                    juce::Justification::centred, 1);
 }
 
+
 void AudioPluginAudioProcessorEditor::resized() {
   // This is generally where you'll want to lay out the positions of any
   // subcomponents in your editor..

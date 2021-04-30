@@ -4,8 +4,9 @@
 #include <juce_audio_processors/juce_audio_processors.h>
 
 
+
 //==============================================================================
-class AudioPluginAudioProcessor : public juce::AudioProcessor {
+class AudioPluginAudioProcessor : public juce::AudioProcessor, juce::Timer {
 public:
   //==============================================================================
   AudioPluginAudioProcessor();
@@ -17,6 +18,8 @@ public:
 	  juce::JuceAudioProcessor* comPluginInstance,
 	  juce::JuceVST3EditController* juceVST3EditController) override;
 
+  Steinberg::TPtrInt handleReaperEmbedMessage(
+	  int msg, Steinberg::TPtrInt parm2, Steinberg::TPtrInt parm3) override;
 	
   //==============================================================================
   void prepareToPlay(double sampleRate, int samplesPerBlock) override;
@@ -49,6 +52,8 @@ public:
   //==============================================================================
   void getStateInformation(juce::MemoryBlock &destData) override;
   void setStateInformation(const void *data, int sizeInBytes) override;
+
+  void timerCallback() override;
 
 private:
   //==============================================================================

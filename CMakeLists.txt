@@ -9,11 +9,13 @@
 # information can be found in the CMake docs.
 
 cmake_minimum_required(VERSION 3.15)
+
+SET(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_FLAGS "/std:c++latest ${CMAKE_CXX_FLAGS}")
 
 # This finds a "patch" command executable on your machine (IE: "git patch")
 # And then tries to apply all of the patches under ./patches/JUCE, skipping if already patched, errors if failed
-include("${CMAKE_CURRENT_LIST_DIR}/cmake/patches.cmake")
+#include("${CMAKE_CURRENT_LIST_DIR}/cmake/patches.cmake")
 
 # The top-level CMakeLists.txt file for a project must contain a literal, direct call to the
 # `project()` command. `project()` sets up some helpful variables that describe source/binary
@@ -83,16 +85,14 @@ target_sources(AudioPluginExample
 # need that's not on by default, check the module header for the correct flag to set here. These
 # definitions will be visible both to your code, and also the JUCE module code, so for new
 # definitions, pick unique names that are unlikely to collide! This is a standard CMake command.
-target_compile_features(AudioPluginExample PRIVATE cxx_std_20)
+#target_compile_features(AudioPluginExample PRIVATE cxx_std_20)
 target_compile_definitions(AudioPluginExample
     PUBLIC
         # JUCE_WEB_BROWSER and JUCE_USE_CURL would be on by default, but you might not need them.
         JUCE_WEB_BROWSER=0  # If you remove this, add `NEEDS_WEB_BROWSER TRUE` to the `juce_add_plugin` call
         JUCE_USE_CURL=0     # If you remove this, add `NEEDS_CURL TRUE` to the `juce_add_plugin` call
-        JUCE_PLUGINHOST_VST3=1
         JUCE_VST3_CAN_REPLACE_VST2=0
         JUCE_VST3_ENABLE_PASS_HOST_CONTEXT_TO_AUDIO_PROCESSOR_ON_INITIALIZE=1
-        JUCE_APP_CONFIG_HEADER="C:\\Users\\rayga\\Projects\\tmp\\JUCE-reaper-embedded-fx-gui\\JuceAppConfigHeader.hpp"
     )
 
 # If your target needs extra binary assets, you can add them here. The first argument is the name of
@@ -118,4 +118,3 @@ target_link_libraries(AudioPluginExample
         juce::juce_recommended_config_flags
         juce::juce_recommended_lto_flags
         juce::juce_recommended_warning_flags)
-

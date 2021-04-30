@@ -9,7 +9,6 @@
   "clangd.onConfigChanged": "restart",
   "clangd.arguments": [
     "-pretty",
-    "-compile-commands-dir='./build'",
     "-header-insertion=iwyu",
     "-header-insertion-decorators",
     "-completion-style=detailed",

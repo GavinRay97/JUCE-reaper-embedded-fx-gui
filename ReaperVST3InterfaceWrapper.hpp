@@ -5,5 +5,9 @@
 using namespace Steinberg;
 #include "./include/vendor/reaper-sdk/sdk/reaper_vst3_interfaces.h"
 
-DEF_CLASS_IID(IReaperHostApplication)
-DEF_CLASS_IID(IReaperUIEmbedInterface)
+// NOTE: Moved to juce_VST3_wrapper.cpp -- revisit later
+// TODO: Subproject, make ReaperVST3InterfaceWrapper.hpp a .cpp and compile to .obj, then link
+// Can only have ONE single reference to DEF_CLASS_IID per project
+
+// DEF_CLASS_IID(IReaperHostApplication)
+// DEF_CLASS_IID(IReaperUIEmbedInterface)
