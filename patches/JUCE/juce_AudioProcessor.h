@@ -40,32 +40,6 @@ namespace juce {
 }
 #endif
 
-#ifdef JUCE_VST3_ENABLE_PASS_HOST_CONTEXT_TO_AUDIO_PROCESSOR_ON_INITIALIZE
-namespace Steinberg {
-        class FUnknown;
-        namespace Vst {
-            class IHostApplication;
-        }
-}
-namespace juce {
-    class JuceVST3EditController;
-	class JuceAudioProcessor;
-}
-#endif
-
-#ifdef JUCE_VST3_ENABLE_PASS_HOST_CONTEXT_TO_AUDIO_PROCESSOR_ON_INITIALIZE
-namespace Steinberg {
-        class FUnknown;
-        namespace Vst {
-            class IHostApplication;
-        }
-}
-namespace juce {
-    class JuceVST3EditController;
-	class JuceAudioProcessor;
-}
-#endif
-
 namespace juce
 {
 
