@@ -15,7 +15,7 @@ set(CMAKE_CXX_FLAGS "/std:c++latest ${CMAKE_CXX_FLAGS}")
 
 # This finds a "patch" command executable on your machine (IE: "git patch")
 # And then tries to apply all of the patches under ./patches/JUCE, skipping if already patched, errors if failed
-#include("${CMAKE_CURRENT_LIST_DIR}/cmake/patches.cmake")
+# include("${CMAKE_CURRENT_LIST_DIR}/cmake/patches.cmake")
 
 # The top-level CMakeLists.txt file for a project must contain a literal, direct call to the
 # `project()` command. `project()` sets up some helpful variables that describe source/binary
@@ -92,6 +92,8 @@ target_compile_definitions(AudioPluginExample
         JUCE_WEB_BROWSER=0  # If you remove this, add `NEEDS_WEB_BROWSER TRUE` to the `juce_add_plugin` call
         JUCE_USE_CURL=0     # If you remove this, add `NEEDS_CURL TRUE` to the `juce_add_plugin` call
         JUCE_VST3_CAN_REPLACE_VST2=0
+        JUCE_DEBUG=1
+        # Custom below here
         JUCE_VST3_ENABLE_PASS_HOST_CONTEXT_TO_AUDIO_PROCESSOR_ON_INITIALIZE=1
     )
 

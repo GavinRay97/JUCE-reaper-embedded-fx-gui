@@ -3,9 +3,9 @@ CompileFlags: # Tweak the parse settings
     - "-xc++"
     - "-std=c++20"
     - "-DJUCE_API=__declspec(dllexport)" # This just exists so every single class with JUCE_API doesn't break syntactically with clangd LSP
-    - "--include-directory ./JUCE/MODULES/juce_core/system/juce_StandardHeader.h"
+    #- "--include-directory ./JUCE/MODULES/juce_core/system/juce_StandardHeader.h"
+
 Index:
- 
   Background: Build # Build a type + incoming reference index in the background
 
 Diagnostics:

@@ -639,6 +639,14 @@ public:
 
     tresult PLUGIN_API queryInterface (const TUID targetIID, void** obj) override
     {
+        char IReaperUIEmbedIIDBuffer[128];
+        IReaperUIEmbedInterface::iid.toString(IReaperUIEmbedIIDBuffer);
+
+        auto targetFUID = FUID::fromTUID(targetIID);
+        char targetFUIDToStringBuffer[128];
+        targetFUID.toString(targetFUIDToStringBuffer);
+        DBG("targetIID = " << targetFUIDToStringBuffer << " (IReaperUIEmbedInterface::IID = " << IReaperUIEmbedIIDBuffer << ")");
+
         TEST_FOR_AND_RETURN_IF_VALID (targetIID, FObject)
         TEST_FOR_AND_RETURN_IF_VALID (targetIID, JuceVST3EditController)
         TEST_FOR_AND_RETURN_IF_VALID (targetIID, Vst::IEditController)
@@ -652,7 +660,11 @@ public:
         TEST_FOR_COMMON_BASE_AND_RETURN_IF_VALID (targetIID, FUnknown, Vst::IEditController)
 
 #ifdef JUCE_VST3_ENABLE_PASS_HOST_CONTEXT_TO_AUDIO_PROCESSOR_ON_INITIALIZE
-        TEST_FOR_AND_RETURN_IF_VALID (targetIID, IReaperUIEmbedInterface)
+        if (doUIDsMatch(targetIID, IReaperUIEmbedInterface::iid)) {
+            addRef ();
+            *obj = dynamic_cast <IReaperUIEmbedInterface*>(this);
+            return Steinberg::kResultOk;
+        }
 #endif
 
         if (doUIDsMatch (targetIID, JuceAudioProcessor::iid))
