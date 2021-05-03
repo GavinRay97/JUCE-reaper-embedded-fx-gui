@@ -281,6 +281,42 @@ private:
 };
 
 //==============================================================================
+std::string tuidToFUIDString(const TUID iid) {
+    const auto targetFUID = FUID::fromTUID(iid);
+    char tmpBuf[128];
+    targetFUID.toString(tmpBuf);
+    return std::string(tmpBuf);
+}
+
+class VST3InterfaceContainer {
+  typedef std::string TUIDRegString;
+public:
+  std::unordered_map<TUIDRegString, Steinberg::FUnknown*> vst3InterfaceMap;
+  std::unordered_map<TUIDRegString, std::string> tuidToClassnameMap;
+
+  template<class T>
+  bool registerInterface(const TUID iid, T klazz) {
+    // this->tuidToClassnameMap.insert_or_assign(fuidStr, std::string(typeid(T).name()));
+    const auto result = this->vst3InterfaceMap.insert_or_assign(
+        tuidToFUIDString(iid), dynamic_cast<FObject*>(klazz));
+    return result.second;
+  }
+
+  Steinberg::FUnknown* findInterface(const TUID iid) {
+    auto klazz = this->vst3InterfaceMap.find(tuidToFUIDString(iid));
+    if (klazz != this->vst3InterfaceMap.end())
+      return klazz->second;
+    return nullptr;
+  }
+
+  std::string findInterfaceClassname(const TUID iid) {
+    auto classname = this->tuidToClassnameMap.find(tuidToFUIDString(iid));
+    if (classname != this->tuidToClassnameMap.end())
+      return classname->second;
+    return nullptr;
+  }
+};
+//==============================================================================
 class JuceAudioProcessor   : public Vst::IUnitInfo
 {
 public:
@@ -599,20 +635,12 @@ class JuceVST3Component;
 static ThreadLocalValue<bool> inParameterChangedCallback;
 
 //==============================================================================
-#ifdef JUCE_VST3_ENABLE_PASS_HOST_CONTEXT_TO_AUDIO_PROCESSOR_ON_INITIALIZE
-#include "../../include/vendor/reaper-sdk/sdk/reaper_vst3_interfaces.h"
-// TODO: Subproject, make ReaperVST3InterfaceWrapper.hpp a .cpp and compile to .obj, then link
-// Can only have ONE single reference to DEF_CLASS_IID per project
-DEF_CLASS_IID(IReaperUIEmbedInterface)
-#endif
 class JuceVST3EditController : public Vst::EditController,
                                public Vst::IMidiMapping,
                                public Vst::IUnitInfo,
                                public Vst::ChannelContext::IInfoListener,
-                               public AudioProcessorListener
-#ifdef JUCE_VST3_ENABLE_PASS_HOST_CONTEXT_TO_AUDIO_PROCESSOR_ON_INITIALIZE
-                             , public IReaperUIEmbedInterface
-#endif
+                               public AudioProcessorListener,
+                               public VST3InterfaceContainer
 {
 public:
     JuceVST3EditController (Vst::IHostApplication* host)
@@ -621,12 +649,6 @@ public:
             host->queryInterface (FUnknown::iid, (void**) &hostContext);
     }
 
-#ifdef JUCE_VST3_ENABLE_PASS_HOST_CONTEXT_TO_AUDIO_PROCESSOR_ON_INITIALIZE
-    Steinberg::TPtrInt embed_message(int msg, Steinberg::TPtrInt parm2, Steinberg::TPtrInt parm3) override
-    {
-        return this->audioProcessor.get()->get()->handleReaperEmbedMessage(msg, parm2, parm3);
-    }
-#endif
     //==============================================================================
     static const FUID iid;
 
@@ -639,13 +661,8 @@ public:
 
     tresult PLUGIN_API queryInterface (const TUID targetIID, void** obj) override
     {
-        char IReaperUIEmbedIIDBuffer[128];
-        IReaperUIEmbedInterface::iid.toString(IReaperUIEmbedIIDBuffer);
-
-        auto targetFUID = FUID::fromTUID(targetIID);
-        char targetFUIDToStringBuffer[128];
-        targetFUID.toString(targetFUIDToStringBuffer);
-        DBG("targetIID = " << targetFUIDToStringBuffer << " (IReaperUIEmbedInterface::IID = " << IReaperUIEmbedIIDBuffer << ")");
+        auto fuidStr = tuidToFUIDString(targetIID);
+        DBG("[JuceVST3Component::queryInterface] targetIID=" << fuidStr);
 
         TEST_FOR_AND_RETURN_IF_VALID (targetIID, FObject)
         TEST_FOR_AND_RETURN_IF_VALID (targetIID, JuceVST3EditController)
@@ -659,14 +676,14 @@ public:
         TEST_FOR_COMMON_BASE_AND_RETURN_IF_VALID (targetIID, IDependent, Vst::IEditController)
         TEST_FOR_COMMON_BASE_AND_RETURN_IF_VALID (targetIID, FUnknown, Vst::IEditController)
 
-#ifdef JUCE_VST3_ENABLE_PASS_HOST_CONTEXT_TO_AUDIO_PROCESSOR_ON_INITIALIZE
-        if (doUIDsMatch(targetIID, IReaperUIEmbedInterface::iid)) {
-            addRef ();
-            *obj = dynamic_cast <IReaperUIEmbedInterface*>(this);
+        auto klazz = this->findInterface(targetIID);
+        if (klazz != nullptr) {
+            DBG("[JuceVST3Component::queryInterface] FOUND MATCH \n targetIID=" << fuidStr << "\n klazzIID=" << tuidToFUIDString(klazz->iid));
+            klazz->addRef();
+            *obj = klazz;
             return Steinberg::kResultOk;
         }
-#endif
-
+        
         if (doUIDsMatch (targetIID, JuceAudioProcessor::iid))
         {
             audioProcessor->addRef();
@@ -2147,16 +2164,6 @@ public:
         if (host != hostContext)
             host.loadFrom (hostContext);
 
-    	
-#ifdef JUCE_VST3_ENABLE_PASS_HOST_CONTEXT_TO_AUDIO_PROCESSOR_ON_INITIALIZE
-        getPluginInstance().handleVST3HostContext(
-           hostContext,
-           this->host.get(),
-           this->comPluginInstance.get(),
-           this->juceVST3EditController.get()
-        );
-#endif
-
         processContext.sampleRate = processSetup.sampleRate;
         preparePlugin (processSetup.sampleRate, (int) processSetup.maxSamplesPerBlock);
 
@@ -3526,9 +3533,13 @@ static FUnknown* createComponentInstance (Vst::IHostApplication* host)
     return static_cast<Vst::IAudioProcessor*> (new JuceVST3Component (host));
 }
 
+#include "../../VST3_JUCE_custom/ReaperCustomIEditController.hpp"
 static FUnknown* createControllerInstance (Vst::IHostApplication* host)
 {
-    return static_cast<Vst::IEditController*> (new JuceVST3EditController (host));
+    auto editController = new JuceVST3EditController (host);
+    const auto reaperEditController = new ReaperVST3EditController();
+    editController->registerInterface(ReaperVST3EditController::iid, reaperEditController);
+    return static_cast<Vst::IEditController*>(editController);
 }
 
 //==============================================================================
