@@ -1,8 +1,8 @@
 diff --git a/modules/juce_audio_plugin_client/VST3/juce_VST3_Wrapper.cpp b/modules/juce_audio_plugin_client/VST3/juce_VST3_Wrapper.cpp
-index bb2ae6535..37c6f593c 100644
+index bb2ae6535..84225b78e 100644
 --- a/modules/juce_audio_plugin_client/VST3/juce_VST3_Wrapper.cpp
 +++ b/modules/juce_audio_plugin_client/VST3/juce_VST3_Wrapper.cpp
-@@ -280,6 +280,42 @@ private:
+@@ -280,6 +280,50 @@ private:
      ThreadLocalValue<bool>& toSet;
  };
  
@@ -22,9 +22,10 @@ index bb2ae6535..37c6f593c 100644
 +
 +  template<class T>
 +  bool registerInterface(const TUID iid, T klazz) {
++    jassert (klazz != nullptr);
 +    // this->tuidToClassnameMap.insert_or_assign(fuidStr, std::string(typeid(T).name()));
 +    const auto result = this->vst3InterfaceMap.insert_or_assign(
-+        tuidToFUIDString(iid), dynamic_cast<FObject*>(klazz));
++        tuidToFUIDString(iid), static_cast<FUnknown*>(klazz));
 +    return result.second;
 +  }
 +
@@ -41,11 +42,18 @@ index bb2ae6535..37c6f593c 100644
 +      return classname->second;
 +    return nullptr;
 +  }
++
++  void printInterfaces() {
++    for (auto const& [key, val] : this->vst3InterfaceMap) {
++        DBG("[VST3InterfaceContainer::printInterfaces] "
++            << key << "=" << static_cast<char*>((void*)val));
++    }
++  }
 +};
  //==============================================================================
  class JuceAudioProcessor   : public Vst::IUnitInfo
  {
-@@ -603,7 +639,8 @@ class JuceVST3EditController : public Vst::EditController,
+@@ -603,7 +647,8 @@ class JuceVST3EditController : public Vst::EditController,
                                 public Vst::IMidiMapping,
                                 public Vst::IUnitInfo,
                                 public Vst::ChannelContext::IInfoListener,
@@ -55,7 +63,7 @@ index bb2ae6535..37c6f593c 100644
  {
  public:
      JuceVST3EditController (Vst::IHostApplication* host)
-@@ -624,6 +661,9 @@ public:
+@@ -624,6 +669,9 @@ public:
  
      tresult PLUGIN_API queryInterface (const TUID targetIID, void** obj) override
      {
@@ -65,7 +73,7 @@ index bb2ae6535..37c6f593c 100644
          TEST_FOR_AND_RETURN_IF_VALID (targetIID, FObject)
          TEST_FOR_AND_RETURN_IF_VALID (targetIID, JuceVST3EditController)
          TEST_FOR_AND_RETURN_IF_VALID (targetIID, Vst::IEditController)
-@@ -636,6 +676,14 @@ public:
+@@ -636,6 +684,15 @@ public:
          TEST_FOR_COMMON_BASE_AND_RETURN_IF_VALID (targetIID, IDependent, Vst::IEditController)
          TEST_FOR_COMMON_BASE_AND_RETURN_IF_VALID (targetIID, FUnknown, Vst::IEditController)
  
@@ -73,24 +81,27 @@ index bb2ae6535..37c6f593c 100644
 +        if (klazz != nullptr) {
 +            DBG("[JuceVST3Component::queryInterface] FOUND MATCH \n targetIID=" << fuidStr << "\n klazzIID=" << tuidToFUIDString(klazz->iid));
 +            klazz->addRef();
++            jassert(*obj != nullptr);
 +            *obj = klazz;
 +            return Steinberg::kResultOk;
 +        }
-+        
++
          if (doUIDsMatch (targetIID, JuceAudioProcessor::iid))
          {
              audioProcessor->addRef();
-@@ -3485,9 +3533,13 @@ static FUnknown* createComponentInstance (Vst::IHostApplication* host)
+@@ -3485,9 +3542,15 @@ static FUnknown* createComponentInstance (Vst::IHostApplication* host)
      return static_cast<Vst::IAudioProcessor*> (new JuceVST3Component (host));
  }
  
++
 +#include "../../VST3_JUCE_custom/ReaperCustomIEditController.hpp"
  static FUnknown* createControllerInstance (Vst::IHostApplication* host)
  {
 -    return static_cast<Vst::IEditController*> (new JuceVST3EditController (host));
++    auto reaperEditController = new ReaperVST3EditController ();
 +    auto editController = new JuceVST3EditController (host);
-+    const auto reaperEditController = new ReaperVST3EditController();
-+    editController->registerInterface(ReaperVST3EditController::iid, reaperEditController);
++    editController->registerInterface(IReaperUIEmbedInterface::iid, reaperEditController);
++    editController->printInterfaces();
 +    return static_cast<Vst::IEditController*>(editController);
  }
  

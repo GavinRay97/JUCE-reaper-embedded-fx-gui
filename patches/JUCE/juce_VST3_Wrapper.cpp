@@ -296,9 +296,10 @@ public:
 
   template<class T>
   bool registerInterface(const TUID iid, T klazz) {
+    jassert (klazz != nullptr);
     // this->tuidToClassnameMap.insert_or_assign(fuidStr, std::string(typeid(T).name()));
     const auto result = this->vst3InterfaceMap.insert_or_assign(
-        tuidToFUIDString(iid), dynamic_cast<FObject*>(klazz));
+        tuidToFUIDString(iid), static_cast<FUnknown*>(klazz));
     return result.second;
   }
 
@@ -314,6 +315,13 @@ public:
     if (classname != this->tuidToClassnameMap.end())
       return classname->second;
     return nullptr;
+  }
+
+  void printInterfaces() {
+    for (auto const& [key, val] : this->vst3InterfaceMap) {
+        DBG("[VST3InterfaceContainer::printInterfaces] "
+            << key << "=" << static_cast<char*>((void*)val));
+    }
   }
 };
 //==============================================================================
@@ -680,10 +688,11 @@ public:
         if (klazz != nullptr) {
             DBG("[JuceVST3Component::queryInterface] FOUND MATCH \n targetIID=" << fuidStr << "\n klazzIID=" << tuidToFUIDString(klazz->iid));
             klazz->addRef();
+            jassert(*obj != nullptr);
             *obj = klazz;
             return Steinberg::kResultOk;
         }
-        
+
         if (doUIDsMatch (targetIID, JuceAudioProcessor::iid))
         {
             audioProcessor->addRef();
@@ -3533,12 +3542,14 @@ static FUnknown* createComponentInstance (Vst::IHostApplication* host)
     return static_cast<Vst::IAudioProcessor*> (new JuceVST3Component (host));
 }
 
+
 #include "../../VST3_JUCE_custom/ReaperCustomIEditController.hpp"
 static FUnknown* createControllerInstance (Vst::IHostApplication* host)
 {
+    auto reaperEditController = new ReaperVST3EditController ();
     auto editController = new JuceVST3EditController (host);
-    const auto reaperEditController = new ReaperVST3EditController();
-    editController->registerInterface(ReaperVST3EditController::iid, reaperEditController);
+    editController->registerInterface(IReaperUIEmbedInterface::iid, reaperEditController);
+    editController->printInterfaces();
     return static_cast<Vst::IEditController*>(editController);
 }
 

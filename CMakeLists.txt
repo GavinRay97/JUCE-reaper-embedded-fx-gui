@@ -95,6 +95,7 @@ target_compile_definitions(AudioPluginExample
         JUCE_DEBUG=1
         # Custom below here
         JUCE_VST3_ENABLE_PASS_HOST_CONTEXT_TO_AUDIO_PROCESSOR_ON_INITIALIZE=1
+        #JUCE_VST3_CUSTOM_JuceVST3EditController_INCLUDE_PATH_I_KNOW_WHAT_I_AM_DOING="C:/Users/rayga/Projects/tmp/JUCE-reaper-embedded-fx-gui/ReaperCustomIEditController.cpp"
     )
 
 # If your target needs extra binary assets, you can add them here. The first argument is the name of

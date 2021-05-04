@@ -1,42 +1,68 @@
 #pragma once
 #include <juce_core/juce_core.h>
 
-#include "../include/vendor/reaper-sdk/sdk/reaper_plugin_fx_embed.h"
 #include "../ReaperVST3InterfaceWrapper.hpp"
-#include "base/source/fobject.h"
+
 #include <juce_audio_processors/format_types/VST3_SDK/pluginterfaces/base/ftypes.h>
+#include <juce_audio_processors/format_types/VST3_SDK/base/source/fdebug.h>
+#include "base/source/fobject.h"
 
-// I'm defining the same class IID as the IReaperUIEmbedInterface so that this implementation class
-// gets resolved by this IID during lookups
-DEF_CLASS_IID(IReaperUIEmbedInterface)
-DECLARE_CLASS_IID(ReaperVST3EditController, 0x049bf9e7, 0xbc74ead0, 0xc4101e86, 0x7f725981)
+#include <basetsd.h>
+#include "../include/vendor/reaper-sdk/sdk/reaper_plugin_fx_embed.h"
+#include "pluginterfaces/base/funknown.h"
 
-// IReaperUIEmbedInterface has to be private, because it extends FUnknown and FObject extends FUnknown
-// so an ambiguous base would occur when trying to cast ReaperVST3EditController -> FUnknown
-// (The problem: Which FUnknown -- FObject's or IReaperUIEmbed's?)
-class ReaperVST3EditController : public FObject,
-                                 private IReaperUIEmbedInterface {
+// DEF_CLASS_IID(IReaperUIEmbedInterface) = (Expanded macro below)
+const ::Steinberg::FUID IReaperUIEmbedInterface::iid(IReaperUIEmbedInterface_iid);
+
+class ReaperVST3EditController final : public IReaperUIEmbedInterface {
 private:
-    virtual Steinberg ::uint32 __stdcall addRef() override { return Steinberg ::FObject ::addRef(); }
-    virtual Steinberg ::uint32 __stdcall release() override { return Steinberg ::FObject ::release(); }
+    Steinberg::int32 refCount = 1;
 
 public:
-    Steinberg::TPtrInt embed_message(int msg, Steinberg::TPtrInt parm2, Steinberg::TPtrInt parm3) override
+    ReaperVST3EditController()
+    {
+        DBG("[ReaperVST3EditController::Constructor()] ReaperVST3EditController created");
+    }
+
+    virtual ~ReaperVST3EditController() = default;
+
+    auto PLUGIN_API addRef() -> Steinberg::uint32 override
+    {
+        DBG("[ReaperVST3EditController::addRef()] CALLED");
+        return (Steinberg::uint32)++ this->refCount;
+    }
+
+    auto PLUGIN_API release() -> Steinberg::uint32 override
+    {
+        DBG("[ReaperVST3EditController::release()] CALLED");
+        const int r = --this->refCount;
+        if (r == 0)
+            delete this;
+        return (Steinberg::uint32)r;
+    }
+
+    auto embed_message(int msg, Steinberg::TPtrInt parm2, Steinberg::TPtrInt parm3) -> Steinberg::TPtrInt override
     {
         DBG("[ReaperVST3EditController::embed_message] msg = " << msg << " parm2 = " << parm2 << " parm3 = " << parm3);
         switch (msg) {
         case REAPER_FXEMBED_WM_IS_SUPPORTED:
-            return 0;
+            return 1;
         }
         return 0;
     };
 
-    tresult queryInterface(const TUID _iid, void** obj) override
+    auto PLUGIN_API queryInterface(const Steinberg::TUID _iid, void** obj) -> Steinberg::tresult override
     {
-        return Steinberg::kResultOk;
-    };
+        DBG("[ReaperVST3EditController::queryInterface()] iid=" << _iid);
+        jassertfalse;
+        *obj = nullptr;
+        return Steinberg::kNotImplemented;
+    }
 
-    static const FUID iid;
+    // https://stackoverflow.com/a/61519399
+    // "In former times, it was usual to declare the static member variable in the header but to define it in the .cpp-file"
+    // "Since C++17, a new alternative is avaibable – using the keyword inline"
+    // > "A static data member may be declared inline. An inline static data member can be defined in the class definition and may specify an initializer.
+    // > "It does not need an out-of-class definition"
+    //inline static const FUID iid = IReaperUIEmbedInterface::iid;
 };
-
-DEF_CLASS_IID(ReaperVST3EditController)
